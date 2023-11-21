@@ -173,7 +173,7 @@ config:
   - name: "builds/Digit-Core/core-services/egov-mdms-service"
     build:
       - work-dir: "core-services/egov-mdms-service"
-        image-name: "egov-mdms-service"
+        image-name: "health-mdms-v1"
         dockerfile: "build/maven/Dockerfile"
 
   - name: "builds/Digit-Core/core-services/mdms-v2"
