@@ -37,7 +37,8 @@ public class MDMSService {
 
 	@Autowired
 	public MDMSService(MdmsDataValidator mdmsDataValidator, MdmsDataEnricher mdmsDataEnricher,
-					   MdmsDataRepository mdmsDataRepository, SchemaUtil schemaUtil, MultiStateInstanceUtil multiStateInstanceUtil) {
+			MdmsDataRepository mdmsDataRepository, SchemaUtil schemaUtil,
+			MultiStateInstanceUtil multiStateInstanceUtil) {
 		this.mdmsDataValidator = mdmsDataValidator;
 		this.mdmsDataEnricher = mdmsDataEnricher;
 		this.mdmsDataRepository = mdmsDataRepository;
@@ -47,6 +48,7 @@ public class MDMSService {
 
 	/**
 	 * This method processes the requests that come for master data creation.
+	 * 
 	 * @param mdmsRequest
 	 * @return
 	 */
@@ -69,6 +71,7 @@ public class MDMSService {
 
 	/**
 	 * This method processes the requests that come for master data search.
+	 * 
 	 * @param mdmsCriteriaReq
 	 * @return
 	 */
@@ -76,7 +79,8 @@ public class MDMSService {
 		Map<String, Map<String, JSONArray>> tenantMasterMap = new HashMap<>();
 
 		/*
-		 * Set incoming tenantId as state level tenantId for fallback in case master data for
+		 * Set incoming tenantId as state level tenantId for fallback in case master
+		 * data for
 		 * concrete tenantId does not exist.
 		 */
 		String tenantId = new StringBuilder(mdmsCriteriaReq.getMdmsCriteria().getTenantId()).toString();
@@ -85,11 +89,43 @@ public class MDMSService {
 		Map<String, String> schemaCodes = getSchemaCodes(mdmsCriteriaReq.getMdmsCriteria());
 		mdmsCriteriaReq.getMdmsCriteria().setSchemaCodeFilterMap(schemaCodes);
 
+		// schemaCodes.entrySet().forEach(entry -> {
+		// 	String schemaCodeStr = entry.getKey();
+		// 	String schemaCodeFilterStr = entry.getValue();
+
+		// 	MdmsCriteria mdmsNewCriteria = new MdmsCriteria();
+		// 	mdmsNewCriteria.setTenantId(mdmsCriteriaReq.getMdmsCriteria().getTenantId());
+		// 	mdmsNewCriteria.setIsActive(mdmsCriteriaReq.getMdmsCriteria().getIsActive());
+		// 	Map<String, String> newSchemaCodesMap = new HashMap<>();
+		// 	newSchemaCodesMap.put(schemaCodeStr, schemaCodeFilterStr);
+		// 	mdmsNewCriteria.setSchemaCodeFilterMap(newSchemaCodesMap);
+		// 	Map<String, Map<String, JSONArray>> tenantMasterNewMap = new HashMap<>();
+		// 	tenantMasterNewMap = mdmsDataRepository.search(mdmsNewCriteria);
+
+		// 	final Map<String, Map<String, JSONArray>> finalTenantMasterMap = tenantMasterMap;
+
+		// 	tenantMasterNewMap.forEach((key, value) -> {
+		// 		Map<String, JSONArray> newHashMap = new HashMap<>();
+		// 		newHashMap.putAll(value);
+		// 		newHashMap.putAll(finalTenantMasterMap.get(mdmsCriteriaReq.getMdmsCriteria().getTenantId()));
+
+		// 		tenantMasterMap.put(mdmsCriteriaReq.getMdmsCriteria().getTenantId(), newHashMap);
+		// 	});
+
+		// 	Map<String, JSONArray> newHashMap = new HashMap<>();
+		// 	newHashMap.putAll(tenantMasterNewMap.get(mdmsCriteriaReq.getMdmsCriteria().getTenantId()));
+		// 	newHashMap.putAll(tenantMasterMap.get(mdmsCriteriaReq.getMdmsCriteria().getTenantId()));
+
+		// 	tenantMasterMap.get(mdmsCriteriaReq.getMdmsCriteria().getTenantId()).put(schemaCodeStr,
+		// 	tenantMasterNewMap.get(mdmsCriteriaReq.getMdmsCriteria().getTenantId()).get(schemaCodeStr));
+		// 	tenantMasterMap.put(mdmsCriteriaReq.getMdmsCriteria().getTenantId(), newHashMap);
+		// });
+
 		// Make a call to the repository layer to fetch data as per given criteria
 		tenantMasterMap = mdmsDataRepository.search(mdmsCriteriaReq.getMdmsCriteria());
 
 		// Apply filters to incoming data
-		tenantMasterMap = applyFilterToData(tenantMasterMap, mdmsCriteriaReq.getMdmsCriteria().getSchemaCodeFilterMap());
+		tenantMasterMap = applyFilterToData(tenantMasterMap,mdmsCriteriaReq.getMdmsCriteria().getSchemaCodeFilterMap());
 
 		// Perform fallback
 		Map<String, JSONArray> masterDataMap = FallbackUtil.backTrackTenantMasterDataMap(tenantMasterMap, tenantId);
@@ -98,15 +134,17 @@ public class MDMSService {
 		return getModuleMasterMap(masterDataMap);
 	}
 
-	private Map<String, Map<String, JSONArray>> applyFilterToData(Map<String, Map<String, JSONArray>> tenantMasterMap, Map<String, String> schemaCodeFilterMap) {
+	private Map<String, Map<String, JSONArray>> applyFilterToData(Map<String, Map<String, JSONArray>> tenantMasterMap,
+			Map<String, String> schemaCodeFilterMap) {
 		Map<String, Map<String, JSONArray>> tenantMasterMapPostFiltering = new HashMap<>();
 
 		tenantMasterMap.keySet().forEach(tenantId -> {
 			Map<String, JSONArray> schemaCodeVsFilteredMasters = new HashMap<>();
 			tenantMasterMap.get(tenantId).keySet().forEach(schemaCode -> {
 				JSONArray masters = tenantMasterMap.get(tenantId).get(schemaCode);
-				if(!ObjectUtils.isEmpty(schemaCodeFilterMap.get(schemaCode))) {
-					schemaCodeVsFilteredMasters.put(schemaCode, filterMasters(masters, schemaCodeFilterMap.get(schemaCode)));
+				if (!ObjectUtils.isEmpty(schemaCodeFilterMap.get(schemaCode))) {
+					schemaCodeVsFilteredMasters.put(schemaCode,
+							filterMasters(masters, schemaCodeFilterMap.get(schemaCode)));
 				} else {
 					schemaCodeVsFilteredMasters.put(schemaCode, masters);
 				}

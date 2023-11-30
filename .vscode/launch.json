@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MDMSApplication<egov-mdms-service-test>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "org.egov.MDMSApplication",
+            "projectName": "egov-mdms-service-test",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
